@@ -15,6 +15,34 @@ import (
 
 var logger_ = loggerPkg.GetLogger()
 
+var deeplToLang = map[string]string{
+	"ZH":   "Chinese(Simplified)",
+	"DE":   "German",
+	"EN":   "English",
+	"ES":   "Spanish",
+	"FR":   "French",
+	"IT":   "Italian",
+	"JA":   "Japanese",
+	"NL":   "Dutch",
+	"PL":   "Polish",
+	"PT":   "Portuguese",
+	"RU":   "Russian",
+	"BG":   "Bulgarian",
+	"CS":   "Czech",
+	"DA":   "Danish",
+	"EL":   "Greek",
+	"ET":   "Estonian",
+	"FI":   "Finnish",
+	"HU":   "Hungarian",
+	"LT":   "Lithuanian",
+	"LV":   "Latvian",
+	"RO":   "Romanian",
+	"SK":   "Slovak",
+	"SL":   "Slovenian",
+	"SV":   "Swedish",
+	"auto": "Auto Detect",
+}
+
 type TranslationRequest struct {
 	Text string `json:"text"`
 	From string `json:"from"`
@@ -42,6 +70,21 @@ type HcfyResponse struct {
 	From   string   `json:"from"`
 	To     string   `json:"to"`
 	Result []string `json:"result"`
+}
+
+type DeepLXRequest struct {
+	Text       string `json:"text"`
+	SourceLang string `json:"source_lang"` // default is auto
+	TragetLang string `json:"target_lang"` // ZH
+}
+
+type DeepLXResponse struct {
+	Code         int32    `json:"code"`
+	Msg          string   `json:"msg"`
+	Data         string   `json:"data"`
+	SourceLang   string   `json:"source_lang"` // default is auto
+	TragetLang   string   `json:"target_lang"` // ZH
+	Alternatives []string `json:"alternatives"`
 }
 
 func NewAuthMiddleware(authTokens []string) func() fiber.Handler {
@@ -172,6 +215,45 @@ func CreateServer(config *configs.Config) *fiber.App {
 		splitText := strings.Split(translatedText, "\n")
 		return ctx.Status(fiber.StatusOK).JSON(HcfyResponse{Text: translatedText, From: request.Source, To: request.Destination[0], Result: splitText})
 	})
+
+	deeplxGroup := app.Group("/api/deeplx")
+
+	for _, endpoint := range clientManager.GetAllEndpoints() {
+		logger_.Info("Adding endpoint to /api/deeplx", zap.String("endpoint", endpoint))
+		deeplxGroup.Post(endpoint, func(ctx *fiber.Ctx) error {
+			var request DeepLXRequest
+			if err := ctx.BodyParser(&request); err != nil {
+				logger_.Error("Invalid request", zap.Error(err))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+			}
+
+			if request.SourceLang == "" {
+				request.SourceLang = "auto"
+			}
+
+			if request.TragetLang == "" || request.Text == "" {
+				logger_.Error("Invalid request", zap.Any("request", request))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+			}
+
+			client, err := clientManager.GetClientByEndpoint(endpoint)
+			if err != nil {
+				logger_.Error("Client not found", zap.String("endpoint", endpoint), zap.Error(err))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
+			}
+
+			sourceLang := deeplToLang[request.SourceLang]
+			targetLang := deeplToLang[request.TragetLang]
+
+			translatedText, err := client.Complete(ctx.Context(), request.Text, sourceLang, targetLang)
+			if err != nil {
+				logger_.Error("Error translating text", zap.String("endpoint", endpoint), zap.Error(err))
+				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
+			}
+
+			return ctx.Status(fiber.StatusOK).JSON(DeepLXResponse{Code: 200, Msg: "success", Data: translatedText, SourceLang: request.SourceLang, TragetLang: request.TragetLang, Alternatives: []string{}})
+		})
+	}
 
 	return app
 }
