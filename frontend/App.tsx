@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import { App, Card, Form, Input, Switch, Select, Button, Space, message } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
-import type { Model, TranslationRequest, TranslationResponse } from './types';
+import { CopyOutlined, ReloadOutlined, SaveOutlined, ClearOutlined } from '@ant-design/icons';
+import type { Model, TranslationResponse } from './types';
+import { TokenManager } from './utils/tokenManager';
+import { useEffect } from 'react';
+
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -12,11 +15,63 @@ function MainApp() {
     const [models, setModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<TranslationResponse[]>([]);
+    const [expirationTime, setExpirationTime] = useState<Date | null>(null);
 
     const [modelForm] = Form.useForm();
     const [translateForm] = Form.useForm();
 
     const { message } = App.useApp();
+
+    // 加载 token
+    const loadTokenFromStorage = () => {
+        console.log('loadTokenFromStorage');
+        const { token, isExpired } = TokenManager.getToken();
+        if (token) {
+            modelForm.setFieldsValue({ token });
+            if (isExpired) {
+                message.warning('Token expired');
+                TokenManager.clearToken();
+            } else {
+                message.success('Token loaded');
+                updateExpirationTime();
+            }
+        } else {
+            message.info('No token found');
+        }
+    };
+
+    // 保存 token
+    const saveTokenToStorage = () => {
+        const token = modelForm.getFieldValue('token');
+        const expirationHours = modelForm.getFieldValue('expirationHours') || 24;
+
+        if (token) {
+            TokenManager.saveToken(token, expirationHours);
+            updateExpirationTime();
+            message.success('Token saved');
+        } else {
+            message.warning('No token to save');
+        }
+    };
+
+    // 重置 token
+    const resetToken = () => {
+        modelForm.setFieldsValue({ token: '' });
+        TokenManager.clearToken();
+        setExpirationTime(null);
+        message.success('Token reset');
+    };
+
+    // 更新过期时间显示
+    const updateExpirationTime = () => {
+        const expTime = TokenManager.getExpirationTime();
+        setExpirationTime(expTime);
+    };
+
+    // 组件加载时自动加载 token
+    useEffect(() => {
+        loadTokenFromStorage();
+    }, []);
 
     const fetchModels = async (values: { token: string, forceRefresh: boolean }) => {
         try {
@@ -113,6 +168,7 @@ function MainApp() {
                     <Form
                         form={modelForm}
                         onFinish={fetchModels}
+                        initialValues={{ expirationHours: 72 * 10 }}
                         layout="vertical"
                     >
                         <Form.Item
@@ -130,6 +186,32 @@ function MainApp() {
                                     <Switch />
                                 </Form.Item>
                             </Space>
+
+                            <Form.Item style={{ marginBottom: 0 }}>
+                                <Space>
+                                <Button
+                                    onClick={loadTokenFromStorage}
+                                    icon={<ReloadOutlined />}
+                                >
+                                    Load Token
+                                </Button>
+                                <Button
+                                    onClick={saveTokenToStorage}
+                                    type="primary"
+                                    icon={<SaveOutlined />}
+                                >
+                                    Save Token
+                                </Button>
+                                <Button
+                                    onClick={resetToken}
+                                    danger
+                                    icon={<ClearOutlined />}
+                                >
+                                        Reset Token
+                                    </Button>
+                                </Space>
+                            </Form.Item>
+
 
                             <Form.Item style={{ marginBottom: 0 }}>
                                 <Button type="primary" htmlType="submit">
