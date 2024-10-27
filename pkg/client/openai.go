@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/sashabaranov/go-openai"
 	"go.uber.org/zap"
@@ -23,16 +24,38 @@ func NewOpenAIClient(info ClientInfo, apiKey string) *OpenAIClient {
 		BaseClient: BaseClient{
 			info:    info,
 			limiter: rate.NewLimiter(rate.Limit(info.RateLimit), 1),
+			cache:   NewMemoryCache(time.Hour*time.Duration(info.CacheExpireHours), time.Minute*10),
 		},
 		apiKey: apiKey,
 		client: openai.NewClientWithConfig(openaiConfig),
 	}
 }
 
-func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLanguage string, toLanguage string) (string, error) {
-	logger.Debug("Call OpenAI Complete", zap.String("Name", c.info.Name), zap.String("Model", c.info.ModelName), zap.String("Endpoint", c.info.Endpoint), zap.String("FromLanguage", fromLanguage), zap.String("ToLanguage", toLanguage))
+func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLanguage string, toLanguage string, forceRefresh bool) (string, error) {
+	logger.Debug("Call OpenAI Complete",
+		zap.String("Name", c.info.Name),
+		zap.String("Model", c.info.ModelName),
+		zap.String("Endpoint", c.info.Endpoint),
+		zap.String("FromLanguage", fromLanguage),
+		zap.String("ToLanguage", toLanguage),
+	)
+
+	cacheKey := fmt.Sprintf("%s_%s_%s_%s", c.info.Name, c.info.ModelName, fromLanguage, toLanguage)
+
+	if !forceRefresh {
+		if cached, err := c.cache.Get(ctx, cacheKey); err == nil {
+			logger.Debug("Cache hit", zap.String("Key", cacheKey))
+			return cached, nil
+		}
+	}
+
 	if err := c.limiter.Wait(ctx); err != nil {
-		logger.Error("OpenAI rate limit exceeded", zap.Error(err), zap.String("Name", c.info.Name), zap.String("Model", c.info.ModelName), zap.String("Endpoint", c.info.Endpoint))
+		logger.Error("OpenAI rate limit exceeded",
+			zap.Error(err),
+			zap.String("Name", c.info.Name),
+			zap.String("Model", c.info.ModelName),
+			zap.String("Endpoint", c.info.Endpoint),
+		)
 		return "", err
 	}
 
@@ -46,11 +69,24 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 	})
 
 	if err != nil {
-		logger.Error("OpenAI Complete failed", zap.Error(err), zap.String("Name", c.info.Name), zap.String("Model", c.info.ModelName), zap.String("Endpoint", c.info.Endpoint), zap.String("FromLanguage", fromLanguage), zap.String("ToLanguage", toLanguage))
+		logger.Error("OpenAI Complete failed",
+			zap.Error(err),
+			zap.String("Name", c.info.Name),
+			zap.String("Model", c.info.ModelName),
+			zap.String("Endpoint", c.info.Endpoint),
+			zap.String("FromLanguage", fromLanguage),
+			zap.String("ToLanguage", toLanguage),
+		)
 		return "", err
 	}
 
-	return resp.Choices[0].Message.Content, nil
+	result := resp.Choices[0].Message.Content
+
+	if err := c.cache.Set(ctx, cacheKey, result, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
+		logger.Warn("Failed to set cache", zap.Error(err), zap.String("Key", cacheKey))
+	}
+
+	return result, nil
 }
 
 func (c *OpenAIClient) GetClientInfo() ClientInfo {

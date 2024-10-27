@@ -6,6 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
 	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/nerdneilsfield/shlogin v0.0.0-20241021135044-691c056cec51
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/sashabaranov/go-openai v1.32.3
 	github.com/spf13/cobra v1.8.1
 	go.uber.org/zap v1.27.0

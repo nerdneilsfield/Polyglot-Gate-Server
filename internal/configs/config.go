@@ -30,16 +30,17 @@ type Config struct {
 }
 
 type Model struct {
-	Name        string  `toml:"name"`
-	BaseURL     string  `toml:"base_url"`
-	Type        string  `toml:"type"`
-	ApiKey      string  `toml:"api_key"`
-	ModelName   string  `toml:"model_name"`
-	MaxTokens   int     `toml:"max_tokens"`
-	Temperature float32 `toml:"temperature"`
-	Prompt      string  `toml:"prompt"`
-	RateLimit   float64 `toml:"rate_limit"`
-	Endpoint    string  `toml:"endpoint"`
+	Name             string  `toml:"name"`
+	BaseURL          string  `toml:"base_url"`
+	Type             string  `toml:"type"`
+	ApiKey           string  `toml:"api_key"`
+	ModelName        string  `toml:"model_name"`
+	MaxTokens        int     `toml:"max_tokens"`
+	Temperature      float32 `toml:"temperature"`
+	Prompt           string  `toml:"prompt"`
+	RateLimit        float64 `toml:"rate_limit"`
+	Endpoint         string  `toml:"endpoint"`
+	CacheExpireHours int     `toml:"cache_expire_hours"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -129,6 +130,11 @@ func (c *Config) Validate() error {
 			logger.Error("Invalid prompt format", zap.String("Prompt", model.Prompt))
 			return fmt.Errorf("invalid prompt format: %s", model.Prompt)
 		}
+
+		if model.CacheExpireHours <= 0 {
+			logger.Error("Invalid cache expire hours", zap.Int("CacheExpireHours", model.CacheExpireHours))
+			return fmt.Errorf("invalid cache expire hours: %d", model.CacheExpireHours)
+		}
 	}
 	return nil
 }
@@ -174,14 +180,15 @@ func CreateClientManager(models []Model) *client.ClientManager {
 	for _, model := range models {
 		if model.Type == "openai" {
 			client := client.NewOpenAIClient(client.ClientInfo{
-				Name:        model.Name,
-				BaseURL:     model.BaseURL,
-				Endpoint:    model.Endpoint,
-				ModelName:   model.ModelName,
-				MaxTokens:   model.MaxTokens,
-				Temperature: model.Temperature,
-				Prompt:      model.Prompt,
-				RateLimit:   model.RateLimit,
+				Name:             model.Name,
+				BaseURL:          model.BaseURL,
+				Endpoint:         model.Endpoint,
+				ModelName:        model.ModelName,
+				MaxTokens:        model.MaxTokens,
+				Temperature:      model.Temperature,
+				Prompt:           model.Prompt,
+				RateLimit:        model.RateLimit,
+				CacheExpireHours: model.CacheExpireHours,
 			}, model.ApiKey)
 			logger.Debug("Adding client", zap.String("ModelName", model.Name), zap.String("Endpoint", model.Endpoint))
 			clientManager.AddClient(model.Endpoint, client)

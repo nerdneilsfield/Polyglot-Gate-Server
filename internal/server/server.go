@@ -44,9 +44,10 @@ var deeplToLang = map[string]string{
 }
 
 type TranslationRequest struct {
-	Text string `json:"text"`
-	From string `json:"from"`
-	To   string `json:"to"`
+	Text         string `json:"text"`
+	From         string `json:"from"` // default is auto
+	To           string `json:"to"`
+	ForceRefresh bool   `json:"force_refresh"` // default is false
 }
 
 type TranslationRequestWithModelName struct {
@@ -121,6 +122,7 @@ func CreateServer(config *configs.Config) *fiber.App {
 
 	clientManager := configs.CreateClientManager(config.Models)
 
+	// translate api
 	api.Post("/translate", func(ctx *fiber.Ctx) error {
 		var request TranslationRequestWithModelName
 		if err := ctx.BodyParser(&request); err != nil {
@@ -134,11 +136,15 @@ func CreateServer(config *configs.Config) *fiber.App {
 
 		client, err := clientManager.GetClientByName(request.ModelName)
 		if err != nil {
-			logger_.Error("Client not found", zap.String("ModelName", request.ModelName), zap.Error(err), zap.Any("clients", clientManager.GetAllNames()))
+			logger_.Error("Client not found",
+				zap.String("ModelName", request.ModelName),
+				zap.Error(err),
+				zap.Any("clients", clientManager.GetAllNames()),
+			)
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
 		}
 
-		translatedText, err := client.Complete(ctx.Context(), request.Text, request.From, request.To)
+		translatedText, err := client.Complete(ctx.Context(), request.Text, request.From, request.To, request.ForceRefresh)
 		if err != nil {
 			logger_.Error("Error translating text", zap.String("ModelName", request.ModelName), zap.Error(err))
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
@@ -156,6 +162,7 @@ func CreateServer(config *configs.Config) *fiber.App {
 		})
 	})
 
+	// translate api by endpoint
 	for _, endpoint := range clientManager.GetAllEndpoints() {
 		logger_.Info("Adding endpoint", zap.String("endpoint", endpoint))
 		modelGroup.Post(endpoint, func(ctx *fiber.Ctx) error {
@@ -176,15 +183,18 @@ func CreateServer(config *configs.Config) *fiber.App {
 				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
 			}
 
-			translatedText, err := client.Complete(ctx.Context(), request.Text, request.From, request.To)
+			translatedText, err := client.Complete(ctx.Context(), request.Text, request.From, request.To, request.ForceRefresh)
 			if err != nil {
 				logger_.Error("Error translating text", zap.String("endpoint", endpoint), zap.Error(err))
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
 			}
-			return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{TranslatedText: translatedText})
+			return ctx.Status(fiber.StatusOK).JSON(
+				TranslationResponse{TranslatedText: translatedText},
+			)
 		})
 	}
 
+	// hcfy api
 	app.Post("/api/hcfy", func(ctx *fiber.Ctx) error {
 		var request HcfyRequest
 		if err := ctx.BodyParser(&request); err != nil {
@@ -207,15 +217,18 @@ func CreateServer(config *configs.Config) *fiber.App {
 			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
 		}
 
-		translatedText, err := client.Complete(ctx.Context(), request.Text, request.Source, request.Destination[0])
+		translatedText, err := client.Complete(ctx.Context(), request.Text, request.Source, request.Destination[0], false)
 		if err != nil {
 			logger_.Error("Error translating text", zap.String("name", request.Name), zap.Error(err))
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
 		}
 		splitText := strings.Split(translatedText, "\n")
-		return ctx.Status(fiber.StatusOK).JSON(HcfyResponse{Text: translatedText, From: request.Source, To: request.Destination[0], Result: splitText})
+		return ctx.Status(fiber.StatusOK).JSON(
+			HcfyResponse{Text: translatedText, From: request.Source, To: request.Destination[0], Result: splitText},
+		)
 	})
 
+	// deeplx api
 	deeplxGroup := app.Group("/api/deeplx")
 
 	for _, endpoint := range clientManager.GetAllEndpoints() {
@@ -245,13 +258,20 @@ func CreateServer(config *configs.Config) *fiber.App {
 			sourceLang := deeplToLang[request.SourceLang]
 			targetLang := deeplToLang[request.TragetLang]
 
-			translatedText, err := client.Complete(ctx.Context(), request.Text, sourceLang, targetLang)
+			translatedText, err := client.Complete(ctx.Context(), request.Text, sourceLang, targetLang, false)
 			if err != nil {
 				logger_.Error("Error translating text", zap.String("endpoint", endpoint), zap.Error(err))
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
 			}
 
-			return ctx.Status(fiber.StatusOK).JSON(DeepLXResponse{Code: 200, Msg: "success", Data: translatedText, SourceLang: request.SourceLang, TragetLang: request.TragetLang, Alternatives: []string{}})
+			return ctx.Status(fiber.StatusOK).JSON(DeepLXResponse{
+				Code:         200,
+				Msg:          "success",
+				Data:         translatedText,
+				SourceLang:   request.SourceLang,
+				TragetLang:   request.TragetLang,
+				Alternatives: []string{},
+			})
 		})
 	}
 

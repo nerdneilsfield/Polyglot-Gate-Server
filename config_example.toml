@@ -14,3 +14,4 @@ temperature = 0.5
 prompt = "Translate the following %s text to %s: '%s', only return the translated text"
 rate_limit = 10.0 # requests per second
 endpoint = "/gpt-3.5-turbo"
+cache_expire_hours = 72

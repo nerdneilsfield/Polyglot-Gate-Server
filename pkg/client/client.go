@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	loggerPkg "github.com/nerdneilsfield/shlogin/pkg/logger"
 	"go.uber.org/zap"
@@ -13,24 +14,26 @@ import (
 var logger = loggerPkg.GetLogger()
 
 type Client interface {
-	Complete(ctx context.Context, inputText string, fromLanguage string, toLanguage string) (string, error)
+	Complete(ctx context.Context, inputText string, fromLanguage string, toLanguage string, forceRefresh bool) (string, error)
 	GetClientInfo() ClientInfo
 }
 
 type ClientInfo struct {
-	Name        string
-	MaxTokens   int
-	Temperature float32
-	RateLimit   float64
-	Prompt      string
-	ModelName   string
-	BaseURL     string
-	Endpoint    string
+	Name             string
+	MaxTokens        int
+	Temperature      float32
+	RateLimit        float64
+	Prompt           string
+	ModelName        string
+	BaseURL          string
+	Endpoint         string
+	CacheExpireHours int
 }
 
 type BaseClient struct {
 	info    ClientInfo
 	limiter *rate.Limiter
+	cache   Cache
 }
 
 func (c *BaseClient) GetClientInfo() ClientInfo {
@@ -42,7 +45,8 @@ func (c *BaseClient) Complete(ctx context.Context, inputText string, fromLanguag
 }
 
 func NewBaseClient(info ClientInfo) *BaseClient {
-	return &BaseClient{info: info, limiter: rate.NewLimiter(rate.Limit(info.RateLimit), 1)}
+	cache := NewMemoryCache(time.Hour*time.Duration(info.CacheExpireHours), time.Minute*10)
+	return &BaseClient{info: info, limiter: rate.NewLimiter(rate.Limit(info.RateLimit), 1), cache: cache}
 }
 
 type ClientManager struct {
