@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -43,6 +44,22 @@ type HcfyResponse struct {
 	Result []string `json:"result"`
 }
 
+func NewAuthMiddleware(authTokens []string) func() fiber.Handler {
+	return func() fiber.Handler {
+		return func(ctx *fiber.Ctx) error {
+			authHeader := ctx.Get("Authorization")
+			if !strings.HasPrefix(authHeader, "Bearer ") {
+				return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+			}
+			token := strings.TrimPrefix(authHeader, "Bearer ")
+			if !slices.Contains(authTokens, token) {
+				return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
+			}
+			return ctx.Next()
+		}
+	}
+}
+
 func CreateServer(config *configs.Config) *fiber.App {
 	logger_.Debug("Creating server", zap.Any("config", config))
 	app := fiber.New(fiber.Config{
@@ -55,7 +72,9 @@ func CreateServer(config *configs.Config) *fiber.App {
 	app.Use(logger.New())
 	app.Use(cors.New())
 
-	api := app.Group("/api/v1")
+	authMiddleware := NewAuthMiddleware(config.AuthToken)
+
+	api := app.Group("/api/v1", authMiddleware())
 
 	clientManager := configs.CreateClientManager(config.Models)
 
@@ -123,7 +142,7 @@ func CreateServer(config *configs.Config) *fiber.App {
 		})
 	}
 
-	api.Post("/hcfy", func(ctx *fiber.Ctx) error {
+	app.Post("/api/hcfy", func(ctx *fiber.Ctx) error {
 		var request HcfyRequest
 		if err := ctx.BodyParser(&request); err != nil {
 			logger_.Error("Invalid request", zap.Error(err))

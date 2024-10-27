@@ -22,10 +22,11 @@ var validModelTypes = []string{"openai"}
 var exampleConfigFs embed.FS
 
 type Config struct {
-	Port    int     `toml:"port"`
-	Host    string  `toml:"host"`
-	LogFile string  `toml:"log_file"`
-	Models  []Model `toml:"models"`
+	Port      int      `toml:"port"`
+	Host      string   `toml:"host"`
+	LogFile   string   `toml:"log_file"`
+	AuthToken []string `toml:"auth_token"`
+	Models    []Model  `toml:"models"`
 }
 
 type Model struct {
