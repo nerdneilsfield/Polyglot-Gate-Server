@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -26,6 +27,20 @@ type TranslationRequestWithModelName struct {
 
 type TranslationResponse struct {
 	TranslatedText string `json:"translated_text"`
+}
+
+type HcfyRequest struct {
+	Name        string   `json:"name"`
+	Text        string   `json:"text"`
+	Destination []string `json:"destination"` //["中文(简体)", "英语"]
+	Source      string   `json:"source"`      // undefined -> auto
+}
+
+type HcfyResponse struct {
+	Text   string   `json:"text"`
+	From   string   `json:"from"`
+	To     string   `json:"to"`
+	Result []string `json:"result"`
 }
 
 func CreateServer(config *configs.Config) *fiber.App {
@@ -107,6 +122,37 @@ func CreateServer(config *configs.Config) *fiber.App {
 			return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{TranslatedText: translatedText})
 		})
 	}
+
+	api.Post("/hcfy", func(ctx *fiber.Ctx) error {
+		var request HcfyRequest
+		if err := ctx.BodyParser(&request); err != nil {
+			logger_.Error("Invalid request", zap.Error(err))
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		}
+
+		if request.Name == "" || request.Text == "" || len(request.Destination) == 0 {
+			logger_.Error("Invalid request", zap.Any("request", request))
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+		}
+
+		if request.Source == "" {
+			request.Source = "auto"
+		}
+
+		client, err := clientManager.GetClientByName(request.Name)
+		if err != nil {
+			logger_.Error("Client not found", zap.String("name", request.Name), zap.Error(err))
+			return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
+		}
+
+		translatedText, err := client.Complete(ctx.Context(), request.Text, request.Source, request.Destination[0])
+		if err != nil {
+			logger_.Error("Error translating text", zap.String("name", request.Name), zap.Error(err))
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
+		}
+		splitText := strings.Split(translatedText, "\n")
+		return ctx.Status(fiber.StatusOK).JSON(HcfyResponse{Text: translatedText, From: request.Source, To: request.Destination[0], Result: splitText})
+	})
 
 	return app
 }
