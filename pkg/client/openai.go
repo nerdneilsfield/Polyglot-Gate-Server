@@ -38,7 +38,6 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 		zap.String("Endpoint", c.info.Endpoint),
 		zap.String("FromLanguage", fromLanguage),
 		zap.String("ToLanguage", toLanguage),
-		zap.String("InputText", inputText),
 	)
 
 	cacheKey := fmt.Sprintf("%s_%s_%s_%s_%s", c.info.Name, c.info.ModelName, fromLanguage, toLanguage, inputText)
