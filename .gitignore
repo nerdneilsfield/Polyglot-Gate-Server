@@ -23,3 +23,17 @@ go.work.sum
 
 # env file
 .env
+
+# editor
+.idea/
+.vscode/
+
+# editor
+.cursorrules
+
+# config
+config.toml
+
+# executable
+Polyglot-Gate-Server
+dist/

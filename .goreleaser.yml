@@ -1,0 +1,147 @@
+version: 2
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+# before:
+#   hooks:
+#     - ./scripts/manpages.sh
+#     - ./scripts/completions.sh
+
+builds:
+  -
+    binary: Polyglot-Gate-Server
+    ldflags:
+      - -s -w
+      - -X main.version={{ .Version }}
+      - -X main.buildTime={{ .Date }}
+      - -X main.gitCommit={{ .FullCommit }}
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - "386"
+      - amd64
+      - arm64
+    overrides:
+      - goos: darwin
+        goarch: amd64
+        ldflags:
+          - -s -w
+        env:
+          - CGO_ENABLED=0
+      - goos: darwin
+        goarch: arm64
+        ldflags:
+          - -s -w
+        env:
+          - CGO_ENABLED=0
+      - goos: linux
+        ldflags:
+          - -s -w -extldflags "-static"
+          - -X main.version={{ .Version }}
+          - -X main.buildTime={{ .Date }}
+          - -X main.gitCommit={{ .FullCommit }}
+
+
+archives:
+  -
+    builds:
+      - Polyglot-Gate-Server
+    format_overrides:
+      - goos: windows
+        format: zip
+
+release:
+  github:
+    owner: nerdneilsfield
+    name: Polyglot-Gate-Server
+
+dockers:
+- image_templates:
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-amd64'
+  dockerfile: Dockerfile
+  use: buildx
+  build_flag_templates:
+  - "--pull"
+  - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/nerdneilsfield/Polyglot-Gate-Server/master/README.md"
+  - "--label=io.artifacthub.package.maintainers=[{\"name\":\"dengqqi\",\"email\":\"dengqqi935@gmail.com\"}]"
+  - "--label=io.artifacthub.package.license=MIT"
+  - "--label=org.opencontainers.image.description=A fast and flexible translation gateway that routes requests to various LLM endpoints with configurable rate limiting and model-specific prompts."
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/amd64"
+- image_templates:
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-arm64'
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-arm64'
+  dockerfile:  Dockerfile
+  use: buildx
+  build_flag_templates:
+  - "--pull"
+  - "--label=io.artifacthub.package.readme-url=https://raw.githubusercontent.com/nerdneilsfield/Polyglot-Gate-Server/master/README.md"
+  # - "--label=io.artifacthub.package.logo-url=https://raw.githubusercontent.com/nerdneilsfield/ghproxy-go/master/www/static/images/logo.png"
+  - "--label=io.artifacthub.package.maintainers=[{\"name\":\"dengqqi\",\"email\":\"dengqqi935@gmail.com\"}]"
+  - "--label=io.artifacthub.package.license=MIT"
+  - "--label=org.opencontainers.image.description=A fast and flexible translation gateway that routes requests to various LLM endpoints with configurable rate limiting and model-specific prompts."
+  - "--label=org.opencontainers.image.created={{.Date}}"
+  - "--label=org.opencontainers.image.name={{.ProjectName}}"
+  - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+  - "--label=org.opencontainers.image.version={{.Version}}"
+  - "--label=org.opencontainers.image.source={{.GitURL}}"
+  - "--platform=linux/arm64"
+  goarch: arm64
+
+docker_manifests:
+- name_template: 'nerdneils/{{.ProjectName}}:{{ .Tag }}'
+  image_templates:
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-arm64'
+- name_template: 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}'
+  image_templates:
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-arm64'
+- name_template: 'nerdneils/{{.ProjectName}}:latest'
+  image_templates:
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'nerdneils/{{.ProjectName}}:{{ .Tag }}-arm64'
+- name_template: 'ghcr.io/nerdneilsfield/{{.ProjectName}}:latest'
+  image_templates:
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-amd64'
+  - 'ghcr.io/nerdneilsfield/{{.ProjectName}}:{{ .Tag }}-arm64'
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+    - '^test:'
+    - '^chore'
+    - 'merge conflict'
+    - Merge pull request
+    - Merge remote-tracking branch
+    - Merge branch
+    - go mod tidy
+  groups:
+    - title: Dependency updates
+      regexp: '^.*?(feat|fix)\(deps\)!?:.+$'
+      order: 300
+    - title: 'New Features'
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 100
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 200
+    - title: 'Documentation updates'
+      regexp: ^.*?doc(\([[:word:]]+\))??!?:.+$
+      order: 400
+    - title: Other work
+      order: 9999
