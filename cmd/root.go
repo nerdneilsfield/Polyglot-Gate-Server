@@ -31,6 +31,7 @@ func newRootCmd(version string, buildTime string, gitCommit string) *cobra.Comma
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enable verbose output")
 
 	cmd.AddCommand(newVersionCmd(version, buildTime, gitCommit))
+	cmd.AddCommand(newRunCmd())
 	return cmd
 }
 
