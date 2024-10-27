@@ -173,7 +173,7 @@ Response:
 }
 ```
 
-### `POST /api/deepl/[endpoint]` Translates content using DeepL. No authentication required.
+### `POST /api/deeplx/[endpoint]` Translates content using DeepL. No authentication required.
 
 Request:
 

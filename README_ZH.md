@@ -195,7 +195,7 @@ Response:
 }
 ```
 
-### `POST /api/deepl/[endpoint]` 使用 DeepL 翻译内容。不需要认证。
+### `POST /api/deeplx/[endpoint]` 使用 DeepL 翻译内容。不需要认证。
 
 Request:
 
