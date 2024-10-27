@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  polyglot:
+    image: nerdneils/polyglot-gate-server:latest
+    #image: ghcr.io/nerdneilsfield/polyglot-gate-server:latest
+    container_name: polyglot
+    ports:
+      - 8080:8080
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    volumes:
+      - ./config.toml:/app/config.toml
+      - ./logs:/app/logs
