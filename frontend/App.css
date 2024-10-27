@@ -1,0 +1,26 @@
+/* App.css */
+.app-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+  
+  .main-card {
+    margin-bottom: 20px;
+  }
+  
+  .settings-card {
+    margin-bottom: 20px;
+  }
+  
+  .result-card {
+    margin-top: 16px;
+  }
+  
+  .result-content {
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 0;
+  }

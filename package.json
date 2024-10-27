@@ -1,0 +1,40 @@
+{
+  "name": "polyglot-gate-server",
+  "version": "1.0.0",
+  "description": "A fast and flexible translation gateway that routes requests to various Large Language Model (LLM) endpoints with configurable rate limiting and model-specific prompting capabilities.",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nerdneilsfield/Polyglot-Gate-Server.git"
+  },
+  "keywords": [
+    "llm",
+    "translation"
+  ],
+  "author": "dengqi <dengqi935@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nerdneilsfield/Polyglot-Gate-Server/issues"
+  },
+  "homepage": "https://github.com/nerdneilsfield/Polyglot-Gate-Server#readme",
+  "dependencies": {
+    "@ant-design/icons": "^5.5.1",
+    "antd": "^5.21.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}

@@ -26,7 +26,7 @@ go build -o Polyglot-Gate-Server main.go
 
 2. **Via Go Get**
 ```bash
-go get github.com/nerdneilsfield/Polyglot-Gate-Server
+go install -u github.com/nerdneilsfield/Polyglot-Gate-Server@latest
 ```
 
 3. **Docker**
@@ -119,7 +119,8 @@ Response:
 
 ```json
 {
-  "translated_text": "你好，世界！"
+  "translated_text": "你好，世界！",
+  "model_name": "gpt-3.5-turbo"
 }
 ```
 

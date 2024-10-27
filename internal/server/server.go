@@ -1,12 +1,15 @@
 package server
 
 import (
+	"embed"
 	"fmt"
+	"net/http"
 	"slices"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/nerdneilsfield/Polyglot-Gate-Server/internal/configs"
 	loggerPkg "github.com/nerdneilsfield/shlogin/pkg/logger"
@@ -14,6 +17,9 @@ import (
 )
 
 var logger = loggerPkg.GetLogger()
+
+//go:embed frontend-dist/*
+var frontend embed.FS
 
 var deeplToLang = map[string]string{
 	"ZH":   "Chinese(Simplified)",
@@ -56,6 +62,7 @@ type TranslationRequestWithModelName struct {
 }
 
 type TranslationResponse struct {
+	ModelName      string `json:"model_name"`
 	TranslatedText string `json:"translated_text"`
 }
 
@@ -118,6 +125,12 @@ func CreateServer(config *configs.Config) *fiber.App {
 
 	authMiddleware := NewAuthMiddleware(config.AuthToken)
 
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:       http.FS(frontend),
+		PathPrefix: "/frontend-dist",
+		Browse:     true,
+	}))
+
 	api := app.Group("/api/v1", authMiddleware())
 
 	clientManager := configs.CreateClientManager(config.Models)
@@ -150,7 +163,7 @@ func CreateServer(config *configs.Config) *fiber.App {
 			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
 		}
 
-		return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{TranslatedText: translatedText})
+		return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{ModelName: request.ModelName, TranslatedText: translatedText})
 	})
 
 	modelGroup := api.Group("/models")
@@ -189,7 +202,7 @@ func CreateServer(config *configs.Config) *fiber.App {
 				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
 			}
 			return ctx.Status(fiber.StatusOK).JSON(
-				TranslationResponse{TranslatedText: translatedText},
+				TranslationResponse{ModelName: client.GetClientInfo().ModelName, TranslatedText: translatedText},
 			)
 		})
 	}

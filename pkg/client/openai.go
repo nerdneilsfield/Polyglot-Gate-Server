@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sashabaranov/go-openai"
@@ -79,13 +80,28 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 		return "", err
 	}
 
-	result := resp.Choices[0].Message.Content
+	// 添加响应内容检查
+	if len(resp.Choices) == 0 {
+		return "", fmt.Errorf("empty response from model %s", c.info.ModelName)
+	}
 
-	if err := c.cache.Set(cacheKey, result, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
+	content := resp.Choices[0].Message.Content
+	// 检查内容是否为空或包含错误信息
+	if strings.Contains(content, "内容由于不合规被停止生成") {
+		logger.Error("Content blocked by model",
+			zap.String("Content", content),
+			zap.String("Name", c.info.Name),
+			zap.String("Model", c.info.ModelName),
+			zap.String("Endpoint", c.info.Endpoint),
+		)
+		return "", fmt.Errorf("content blocked by model %s", c.info.ModelName)
+	}
+
+	if err := c.cache.Set(cacheKey, content, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
 		logger.Warn("Failed to set cache", zap.Error(err), zap.String("Key", cacheKey))
 	}
 
-	return result, nil
+	return content, nil
 }
 
 func (c *OpenAIClient) GetClientInfo() ClientInfo {

@@ -26,7 +26,7 @@ go build -o Polyglot-Gate-Server main.go
 ### 使用 `go get` 安装
 
 ```
-go get github.com/nerdneilsfield/Polyglot-Gate-Server
+go install -u github.com/nerdneilsfield/Polyglot-Gate-Server@latest
 ```
 
 ### 直接下载编译好的文件
@@ -140,7 +140,8 @@ Response:
 
 ```json
 {
-  "translated_text": "你好，世界！"
+  "translated_text": "你好，世界！",
+  "model_name": "gpt-3.5-turbo"
 }
 ```
 
