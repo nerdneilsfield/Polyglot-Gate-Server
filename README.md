@@ -83,9 +83,6 @@ Note: The `%s` placeholders in the prompt represent source language, target lang
 
 ## API Usage
 
-I'll help you translate the API documentation section from Chinese to English. Here's the translation:
-
-````markdown:README_ZH.md
 <details>
 <summary>API Documentation</summary>
 
@@ -201,7 +198,7 @@ Response:
 }
 ```
 </details>
-````
+
 
 ## Project Structure
 
