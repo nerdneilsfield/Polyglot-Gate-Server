@@ -41,7 +41,7 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 		zap.String("InputText", inputText),
 	)
 
-	cacheKey := fmt.Sprintf("%s_%s_%s_%s", c.info.Name, c.info.ModelName, fromLanguage, toLanguage)
+	cacheKey := fmt.Sprintf("%s_%s_%s_%s_%s", c.info.Name, c.info.ModelName, fromLanguage, toLanguage, inputText)
 
 	if !forceRefresh {
 		if cached, err := c.cache.Get(cacheKey); err == nil {
