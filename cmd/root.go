@@ -8,8 +8,10 @@ import (
 	"go.uber.org/zap"
 )
 
-var verbose bool
-var logger = loggerPkg.GetLogger()
+var (
+	verbose bool
+	logger  = loggerPkg.GetLogger()
+)
 
 func newRootCmd(version string, buildTime string, gitCommit string) *cobra.Command {
 	cmd := &cobra.Command{

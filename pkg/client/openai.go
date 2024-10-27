@@ -67,7 +67,6 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 		Temperature: c.info.Temperature,
 		MaxTokens:   c.info.MaxTokens,
 	})
-
 	if err != nil {
 		logger.Error("OpenAI Complete failed",
 			zap.Error(err),

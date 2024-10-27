@@ -150,7 +150,6 @@ func isValidPromptFormat(format string, expectedArgs int) bool {
 }
 
 func GenerateExampleConfig(filePath string) error {
-
 	// check if file path exists
 	if _, err := os.Stat(filePath); !os.IsNotExist(err) {
 		logger.Error("File already exists", zap.String("Path", filePath))
