@@ -1,11 +1,17 @@
+import './i18n';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { App as AntApp } from 'antd';  // 重命名避免与你的 App 组件冲突
 import { ConfigProvider } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
-import App from './App'
+import enUS from 'antd/locale/en_US';
+import jaJP from 'antd/locale/ja_JP';
+import MainApp from './App'
 import 'antd/dist/reset.css'
-import './index.css'
+import './styles/global.css'
+
+const currentLanguage = localStorage.getItem('i18nextLng') || 'zh';
+
 
 // 错误边界组件
 class ErrorBoundary extends React.Component<
@@ -55,7 +61,7 @@ prepare().then(() => {
     <React.StrictMode>
       <ErrorBoundary>
         <ConfigProvider
-          locale={zhCN}
+          locale={currentLanguage.startsWith('zh') ? zhCN : enUS}
           theme={{
             token: {
               // 自定义主题
@@ -64,7 +70,7 @@ prepare().then(() => {
           }}
         >
           <AntApp>
-            <App />
+            <MainApp />
           </AntApp>
         </ConfigProvider>
       </ErrorBoundary>

@@ -1,0 +1,45 @@
+{
+    "settings": {
+        "token": "API Token",
+        "tokenPlaceholder": "Please enter your API Token",
+        "forceRefresh": "Force Refresh",
+        "loadModels": "Load Models",
+        "tokenRequired": "Please enter API Token",
+        "loadToken": "Load Token",
+        "saveToken": "Save Token",
+        "resetToken": "Reset Token"
+    },
+    "translation": {
+        "title": "Translation Results",
+        "selectModels": "Select Models",
+        "selectModelsPlaceholder": "Please select models",
+        "sourceText": "Source Text",
+        "sourceTextPlaceholder": "Please enter text to translate",
+        "translate": "Translate",
+        "copy": "Copy",
+        "copied": "Copied to clipboard",
+        "copyFailed": "Copy failed",
+        "resultsTitle": "Translation Results",
+        "english": "English",
+        "chinese": "Simplified Chinese",
+        "french": "French",
+        "german": "German",
+        "italian": "Italian",
+        "korean": "Korean",
+        "japanese": "Japanese"
+    },
+    "messages": {
+        "tokenLoaded": "Token loaded",
+        "noTokenFound": "No saved token found",
+        "tokenLoadError": "Failed to load token",
+        "tokenSaved": "Token saved",
+        "noTokenToSave": "No token to save",
+        "tokenSaveError": "Failed to save token",
+        "tokenReset": "Token reset",
+        "modelsLoaded": "Models loaded successfully",
+        "modelsLoadFailed": "Failed to load models",
+        "invalidResponse": "Invalid response format",
+        "pleaseSelectModel": "Please select at least one model",
+        "translating": "Translating..."
+    }
+}
