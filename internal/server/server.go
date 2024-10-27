@@ -70,6 +70,44 @@ func CreateServer(config *configs.Config) *fiber.App {
 		return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{TranslatedText: translatedText})
 	})
 
+	modelGroup := api.Group("/models")
+
+	modelGroup.Get("/", func(ctx *fiber.Ctx) error {
+		return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+			"models_by_name":     clientManager.GetAllNames(),
+			"models_by_endpoint": clientManager.GetAllEndpoints(),
+		})
+	})
+
+	for _, endpoint := range clientManager.GetAllEndpoints() {
+		logger_.Info("Adding endpoint", zap.String("endpoint", endpoint))
+		modelGroup.Post(endpoint, func(ctx *fiber.Ctx) error {
+			var request TranslationRequest
+			if err := ctx.BodyParser(&request); err != nil {
+				logger_.Error("Invalid request", zap.Error(err))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+			}
+
+			if request.From == "" || request.To == "" || request.Text == "" {
+				logger_.Error("Invalid request", zap.Any("request", request))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+			}
+
+			client, err := clientManager.GetClientByEndpoint(endpoint)
+			if err != nil {
+				logger_.Error("Client not found", zap.String("endpoint", endpoint), zap.Error(err))
+				return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Client not found"})
+			}
+
+			translatedText, err := client.Complete(ctx.Context(), request.Text, request.From, request.To)
+			if err != nil {
+				logger_.Error("Error translating text", zap.String("endpoint", endpoint), zap.Error(err))
+				return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error translating text"})
+			}
+			return ctx.Status(fiber.StatusOK).JSON(TranslationResponse{TranslatedText: translatedText})
+		})
+	}
+
 	return app
 }
 
