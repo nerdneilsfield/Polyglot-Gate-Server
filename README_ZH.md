@@ -101,6 +101,126 @@ cache_expire_hours = 72 # hours
 
 注意 `prompt` 中的 `%s` 会被替换为划词翻译的源语言、目标语言和划词内容。必须要包含这三个占位符。
 
+
+## API
+
+<details>
+<summary>API 文档</summary>
+
+### `GET /api/v1/models` 返回所有支持的模型列表。使用 `Bearer Token` 认证。
+
+Response:
+
+```json
+{
+  "models_by_endpoint": [
+    "/gpt-3.5-turbo"
+  ],
+  "models_by_name": [
+    "gpt-3.5-turbo"
+  ]
+}
+```
+
+### `POST /api/v1/translate` 翻译内容。使用 `Bearer Token` 认证。
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "from": "English",
+  "to": "中文(简体)",
+  "model_name": "gpt-3.5-turbo",
+  "force_refresh": false
+}
+```
+
+Response:
+
+```json
+{
+  "translated_text": "你好，世界！"
+}
+```
+
+其中 `force_refresh` 为 `true` 时，会强制刷新缓存。
+
+### `POST /api/v1/models/[endpoint]` 翻译内容。使用 `Bearer Token` 认证。
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "from": "English",
+  "to": "中文(简体)",
+  "model_name": "gpt-3.5-turbo",
+  "force_refresh": false
+}
+```
+
+Response:
+
+```json
+{
+  "translated_text": "你好，世界！"
+}
+```
+
+其中 `force_refresh` 为 `true` 时，会强制刷新缓存。
+
+
+### `POST /api/hcfy` 划词翻译。不需要认证。
+
+Request:
+
+```json
+{
+  "name": "gpt-3.5-turbo",
+  "text": "Hello, world!",
+  "destination": ["中文(简体)", "英语"],
+  "source": "auto"
+}
+```
+
+Response:
+
+```json
+{
+  "text": "你好，世界！",
+  "from": "English",
+  "to": "中文(简体)",
+  "result": ["你好，世界！"]
+}
+```
+
+### `POST /api/deepl/[endpoint]` 使用 DeepL 翻译内容。不需要认证。
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "source_lang": "auto",
+  "target_lang": "ZH"
+}
+```
+
+Response:
+
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": "你好，世界！",
+  "source_lang": "auto",
+  "target_lang": "ZH",
+  "alternatives": []
+}
+```
+</details>
+
 ## 开发
 
 项目使用 Go 语言开发,主要结构如下:

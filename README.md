@@ -81,6 +81,128 @@ cache_expire_hours = 72
 
 Note: The `%s` placeholders in the prompt represent source language, target language, and text to translate respectively.
 
+## API Usage
+
+I'll help you translate the API documentation section from Chinese to English. Here's the translation:
+
+````markdown:README_ZH.md
+<details>
+<summary>API Documentation</summary>
+
+### `GET /api/v1/models` Returns a list of all supported models. Uses `Bearer Token` authentication.
+
+Response:
+
+```json
+{
+  "models_by_endpoint": [
+    "/gpt-3.5-turbo"
+  ],
+  "models_by_name": [
+    "gpt-3.5-turbo"
+  ]
+}
+```
+
+### `POST /api/v1/translate` Translates content. Uses `Bearer Token` authentication.
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "from": "English",
+  "to": "中文(简体)",
+  "model_name": "gpt-3.5-turbo",
+  "force_refresh": false
+}
+```
+
+Response:
+
+```json
+{
+  "translated_text": "你好，世界！"
+}
+```
+
+When `force_refresh` is set to `true`, it will force refresh the cache.
+
+### `POST /api/v1/models/[endpoint]` Translates content. Uses `Bearer Token` authentication.
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "from": "English",
+  "to": "中文(简体)",
+  "model_name": "gpt-3.5-turbo",
+  "force_refresh": false
+}
+```
+
+Response:
+
+```json
+{
+  "translated_text": "你好，世界！"
+}
+```
+
+When `force_refresh` is set to `true`, it will force refresh the cache.
+
+### `POST /api/hcfy` Selection translation. No authentication required.
+
+Request:
+
+```json
+{
+  "name": "gpt-3.5-turbo",
+  "text": "Hello, world!",
+  "destination": ["中文(简体)", "English"],
+  "source": "auto"
+}
+```
+
+Response:
+
+```json
+{
+  "text": "你好，世界！",
+  "from": "English",
+  "to": "中文(简体)",
+  "result": ["你好，世界！"]
+}
+```
+
+### `POST /api/deepl/[endpoint]` Translates content using DeepL. No authentication required.
+
+Request:
+
+```json
+{
+  "text": "Hello, world!",
+  "source_lang": "auto",
+  "target_lang": "ZH"
+}
+```
+
+Response:
+
+```json
+{
+  "code": 200,
+  "msg": "success",
+  "data": "你好，世界！",
+  "source_lang": "auto",
+  "target_lang": "ZH",
+  "alternatives": []
+}
+```
+</details>
+````
+
 ## Project Structure
 
 ```
