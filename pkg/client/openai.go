@@ -43,7 +43,7 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 	cacheKey := fmt.Sprintf("%s_%s_%s_%s", c.info.Name, c.info.ModelName, fromLanguage, toLanguage)
 
 	if !forceRefresh {
-		if cached, err := c.cache.Get(ctx, cacheKey); err == nil {
+		if cached, err := c.cache.Get(cacheKey); err == nil {
 			logger.Debug("Cache hit", zap.String("Key", cacheKey))
 			return cached, nil
 		}
@@ -82,7 +82,7 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 
 	result := resp.Choices[0].Message.Content
 
-	if err := c.cache.Set(ctx, cacheKey, result, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
+	if err := c.cache.Set(cacheKey, result, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
 		logger.Warn("Failed to set cache", zap.Error(err), zap.String("Key", cacheKey))
 	}
 

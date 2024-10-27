@@ -33,7 +33,7 @@ type Model struct {
 	Name             string  `toml:"name"`
 	BaseURL          string  `toml:"base_url"`
 	Type             string  `toml:"type"`
-	ApiKey           string  `toml:"api_key"`
+	APIKey           string  `toml:"api_key"`
 	ModelName        string  `toml:"model_name"`
 	MaxTokens        int     `toml:"max_tokens"`
 	Temperature      float32 `toml:"temperature"`
@@ -95,9 +95,9 @@ func (c *Config) Validate() error {
 			logger.Error("Invalid model type", zap.String("Type", model.Type))
 			return fmt.Errorf("invalid model type: %s", model.Type)
 		}
-		if model.ApiKey == "" {
-			logger.Error("Invalid API key", zap.String("ApiKey", model.ApiKey))
-			return fmt.Errorf("invalid API key: %s", model.ApiKey)
+		if model.APIKey == "" {
+			logger.Error("Invalid API key", zap.String("APIKey", model.APIKey))
+			return fmt.Errorf("invalid API key: %s", model.APIKey)
 		}
 		if model.ModelName == "" {
 			logger.Error("Invalid model name", zap.String("ModelName", model.ModelName))
@@ -189,7 +189,7 @@ func CreateClientManager(models []Model) *client.ClientManager {
 				Prompt:           model.Prompt,
 				RateLimit:        model.RateLimit,
 				CacheExpireHours: model.CacheExpireHours,
-			}, model.ApiKey)
+			}, model.APIKey)
 			logger.Debug("Adding client", zap.String("ModelName", model.Name), zap.String("Endpoint", model.Endpoint))
 			clientManager.AddClient(model.Endpoint, client)
 		}
