@@ -11,6 +11,7 @@
   },
   "translation": {
     "title": "Translation Results",
+    "noResult": "No translation results",
     "sourceLanguage": "Source Language",
     "targetLanguage": "Target Language",
     "selectModels": "Select Models",

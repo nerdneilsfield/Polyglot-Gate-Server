@@ -11,6 +11,7 @@
     },
     "translation": {
       "title": "번역 결과",
+      "noResult": "번역 결과가 없습니다",
       "sourceLanguage": "원본 언어",
       "targetLanguage": "목표 언어",
       "selectModels": "모델 선택",

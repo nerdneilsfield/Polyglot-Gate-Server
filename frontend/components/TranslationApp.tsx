@@ -1,20 +1,36 @@
 import { useState } from 'react';
-import { App, Card, Form, Input, Switch, Select, Button, Space} from 'antd';
+import { App, Card, Form, Input, Switch, Select, Button, Space, Typography } from 'antd';
 import { CopyOutlined, ReloadOutlined, SaveOutlined, ClearOutlined, TranslationOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import type { Model, TranslationResponse } from '../types';
 import { TokenManager } from '../utils/tokenManager';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import './TranslationApp.css'
 
 const { TextArea } = Input;
 const { Option } = Select;
 
-// TODO: 优化对手机的支持！
-
 interface TranslationAppProps {
     isMobile: boolean;
 }
+
+const markdownStyles = {
+    pre: {
+        background: '#f6f8fa',
+        padding: '16px',
+        borderRadius: '6px',
+        overflow: 'auto',
+    },
+    code: {
+        fontFamily: 'Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace',
+        fontSize: '14px',
+        lineHeight: '1.5',
+    }
+};
+
 
 
 function TranslationApp({ isMobile }: TranslationAppProps) {
@@ -369,7 +385,20 @@ function TranslationApp({ isMobile }: TranslationAppProps) {
                                         lineHeight: '1.6',
                                         marginBottom: '32px' // 为底部按钮留出空间
                                     }}>
-                                        {result.translated_text}
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm]}
+                                            rehypePlugins={[rehypeRaw]}
+                                            components={{
+                                                pre: ({ node, ...props }) => (
+                                                    <pre style={markdownStyles.pre} {...props} />
+                                                ),
+                                                code: ({ node, ...props }) => (
+                                                    <code style={markdownStyles.code} {...props} />
+                                                )
+                                            }}
+                                        >
+                                            {result.translated_text}
+                                        </ReactMarkdown>
                                     </div>
                                     <div style={{
                                         position: 'absolute',

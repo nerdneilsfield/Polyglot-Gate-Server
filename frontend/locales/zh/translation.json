@@ -39,7 +39,8 @@
     "portuguese": "葡萄牙语",
     "russian": "俄语",
     "spanish": "西班牙语",
-    "classical_chinese": "文言文"
+    "classical_chinese": "文言文",
+    "noResult": "没有结果"
   },
   "messages": {
     "tokenLoaded": "Token 已加载",

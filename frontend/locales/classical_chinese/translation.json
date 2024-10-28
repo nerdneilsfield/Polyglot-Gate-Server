@@ -11,6 +11,7 @@
     },
     "translation": {
       "title": "譯文",
+      "noResult": "無譯文",
       "sourceLanguage": "原文之語",
       "targetLanguage": "譯文之語",
       "selectModels": "擇範本",

@@ -9,7 +9,7 @@ import jaJP from 'antd/locale/ja_JP';
 import MainApp from './App'
 import 'antd/dist/reset.css'
 import './styles/global.css'
-
+import './styles/markdown.css'
 const currentLanguage = localStorage.getItem('i18nextLng') || 'zh';
 
 
