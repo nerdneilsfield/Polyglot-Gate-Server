@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"net/http"
@@ -20,6 +21,9 @@ var logger = loggerPkg.GetLogger()
 
 //go:embed frontend-dist/*
 var frontend embed.FS
+
+//go:embed favicon.ico
+var favicon embed.FS
 
 var deeplToLang = map[string]string{
 	"ZH":   "Chinese(Simplified)",
@@ -130,6 +134,14 @@ func CreateServer(config *configs.Config) *fiber.App {
 		PathPrefix: "/frontend-dist",
 		Browse:     true,
 	}))
+
+	app.Get("/favicon.ico", func(ctx *fiber.Ctx) error {
+		faviconFile, err := favicon.ReadFile("favicon.ico")
+		if err != nil {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to read favicon"})
+		}
+		return ctx.Status(fiber.StatusOK).SendStream(bytes.NewReader(faviconFile))
+	})
 
 	api := app.Group("/api/v1", authMiddleware())
 

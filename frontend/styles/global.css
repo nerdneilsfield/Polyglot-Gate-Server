@@ -3,16 +3,72 @@ body {
     margin: 0;
     padding: 0;
     background-color: #f0f2f5;
-}
-
-.ant-layout {
-    background-color: #f0f2f5;
-}
-
-.ant-select-selector {
-    transition: all 0.3s;
-}
-
-.ant-select-selector:hover {
-    background-color: #f5f5f5 !important;
-}
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation;
+  }
+  
+  /* 禁用移动端双击缩放 */
+  * {
+    touch-action: manipulation;
+  }
+  
+  /* 移动端点击高亮效果 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* 优化移动端滚动 */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  /* 适配不同设备的字体大小 */
+  @media screen and (max-width: 768px) {
+    html {
+      font-size: 14px;
+    }
+  }
+  
+  /* 适配刘海屏 */
+  @supports (padding: max(0px)) {
+    .ant-layout-header {
+      padding-left: max(12px, env(safe-area-inset-left));
+      padding-right: max(12px, env(safe-area-inset-right));
+    }
+    
+    .ant-layout-footer {
+      padding-bottom: max(16px, env(safe-area-inset-bottom));
+    }
+  }
+  
+  /* 优化移动端表单元素 */
+  @media screen and (max-width: 768px) {
+    .ant-input {
+      font-size: 16px; /* 防止 iOS 自动缩放 */
+    }
+    
+    .ant-btn {
+      height: 40px; /* 更大的点击区域 */
+      font-size: 14px;
+    }
+    
+    .ant-form-item-label > label {
+      font-size: 14px;
+    }
+  }

@@ -97,6 +97,21 @@ func (c *OpenAIClient) Complete(ctx context.Context, inputText string, fromLangu
 		return "", fmt.Errorf("content blocked by model %s", c.info.ModelName)
 	}
 
+	// remove the surrounding quotes if they exist
+	if strings.HasPrefix(content, "\"") && strings.HasSuffix(content, "\"") {
+		content = content[1 : len(content)-1]
+	}
+
+	if strings.HasPrefix(content, "```") && strings.HasSuffix(content, "```") {
+		content = strings.TrimPrefix(content, "```")
+		content = strings.TrimSuffix(content, "```")
+	}
+
+	if strings.HasPrefix(content, "'") && strings.HasSuffix(content, "'") {
+		content = strings.TrimPrefix(content, "'")
+		content = strings.TrimSuffix(content, "'")
+	}
+
 	if err := c.cache.Set(cacheKey, content, time.Hour*time.Duration(c.info.CacheExpireHours)); err != nil {
 		logger.Warn("Failed to set cache", zap.Error(err), zap.String("Key", cacheKey))
 	}

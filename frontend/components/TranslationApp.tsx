@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { App, Card, Form, Input, Switch, Select, Button, Space, message } from 'antd';
-import { CopyOutlined, ReloadOutlined, SaveOutlined, ClearOutlined } from '@ant-design/icons';
+import { App, Card, Form, Input, Switch, Select, Button, Space} from 'antd';
+import { CopyOutlined, ReloadOutlined, SaveOutlined, ClearOutlined, TranslationOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import type { Model, TranslationResponse } from '../types';
 import { TokenManager } from '../utils/tokenManager';
 import { useEffect } from 'react';
@@ -10,10 +10,16 @@ import './TranslationApp.css'
 const { TextArea } = Input;
 const { Option } = Select;
 
-function TranslationApp() {
-    const { t, i18n } = useTranslation();
+// TODO: 优化对手机的支持！
+
+interface TranslationAppProps {
+    isMobile: boolean;
+}
+
+
+function TranslationApp({ isMobile }: TranslationAppProps) {
+    const { t } = useTranslation();
     const [token, setToken] = useState<string>('');
-    const [forceRefresh, setForceRefresh] = useState(false);
     const [models, setModels] = useState<Model[]>([]);
     const [loading, setLoading] = useState(false);
     const [results, setResults] = useState<TranslationResponse[]>([]);
@@ -23,12 +29,6 @@ function TranslationApp() {
     const [translateForm] = Form.useForm();
 
     const { message } = App.useApp();
-
-    // 添加语言切换功能
-    const toggleLanguage = () => {
-        const nextLang = i18n.language.startsWith('zh') ? 'en' : 'zh';
-        i18n.changeLanguage(nextLang);
-    };
 
     // 加载 token
     const loadTokenFromStorage = () => {
@@ -42,6 +42,7 @@ function TranslationApp() {
             } else {
                 message.success(t('messages.tokenLoaded'));
                 updateExpirationTime();
+                fetchModels({ token });
             }
         } else {
             message.info(t('messages.noTokenFound'));
@@ -81,7 +82,7 @@ function TranslationApp() {
         loadTokenFromStorage();
     }, []);
 
-    const fetchModels = async (values: { token: string, forceRefresh: boolean }) => {
+    const fetchModels = async (values: { token: string }) => {
         try {
             const response = await fetch('/api/v1/models', {
                 headers: {
@@ -94,7 +95,6 @@ function TranslationApp() {
                 const models = data.models_by_name;
                 if (Array.isArray(models)) {
                     setModels(models);
-                    setForceRefresh(values.forceRefresh);
                     setToken(values.token);
                     console.log(models);
                     message.success(t('messages.modelsLoaded'));
@@ -115,6 +115,7 @@ function TranslationApp() {
         text: string;
         from: string;
         to: string;
+        forceRefresh: boolean;
     }) => {
         if (!token) {
             message.error(t('messages.pleaseLoadModelsFirst'));
@@ -146,7 +147,7 @@ function TranslationApp() {
                             from,
                             to,
                             model_name,
-                            force_refresh: forceRefresh,
+                            force_refresh: values.forceRefresh,
                         })
                     }).then(res => res.json())
                 })
@@ -166,9 +167,13 @@ function TranslationApp() {
 
     return (
         <div style={{
-            padding: '24px',
-            maxWidth: '800px',  // 设置最大宽度
-            margin: '0 auto',   // 水平居中
+            maxWidth: '900px',
+            margin: '0 auto',
+            padding: isMobile ? '16px' : '24px',
+            background: '#fff',
+            borderRadius: isMobile ? '12px' : '8px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            width: isMobile ? '100%' : '90%'
         }}>
             <Space direction="vertical" style={{ width: '100%' }} size="large">
                 {/* Models Form */}
@@ -187,46 +192,45 @@ function TranslationApp() {
                             <Input.Password placeholder="Enter your API token" />
                         </Form.Item>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Space>
-                                <span>{t('settings.forceRefresh')}</span>
-                                <Form.Item name="forceRefresh" valuePropName="checked" style={{ marginBottom: 0 }}>
-                                    <Switch />
-                                </Form.Item>
-                            </Space>
-
-                            <Form.Item style={{ marginBottom: 0 }}>
-                                <Space>
-                                    <Button
-                                        onClick={loadTokenFromStorage}
-                                        icon={<ReloadOutlined />}
-                                    >
-                                        {t('settings.loadToken')}
-                                    </Button>
-                                    <Button
-                                        onClick={saveTokenToStorage}
-                                        type="primary"
-                                        icon={<SaveOutlined />}
-                                    >
-                                        {t('settings.saveToken')}
-                                    </Button>
-                                    <Button
-                                        onClick={resetToken}
-                                        danger
-                                        icon={<ClearOutlined />}
-                                    >
-                                        {t('settings.resetToken')}
-                                    </Button>
-                                </Space>
-                            </Form.Item>
-
-
-                            <Form.Item style={{ marginBottom: 0 }}>
-                                <Button type="primary" htmlType="submit">
-                                    {t('settings.loadModels')}
-                                </Button>
-                            </Form.Item>
-                        </div>
+                        <Space
+                            direction="vertical"
+                            style={{
+                                width: '100%',
+                                gap: '8px'
+                            }}
+                        >
+                            <Button
+                                icon={<ReloadOutlined />}
+                                onClick={loadTokenFromStorage}
+                                block
+                            >
+                                {t('settings.loadToken')}
+                            </Button>
+                            <Button
+                                onClick={saveTokenToStorage}
+                                type="primary"
+                                icon={<SaveOutlined />}
+                                block
+                            >
+                                {t('settings.saveToken')}
+                            </Button>
+                            <Button
+                                onClick={resetToken}
+                                danger
+                                icon={<ClearOutlined />}
+                                block
+                            >
+                                {t('settings.resetToken')}
+                            </Button>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                block
+                            >
+                                <CloudDownloadOutlined />
+                                {t('settings.loadModels')}
+                            </Button>
+                        </Space>
                     </Form>
                 </Card>
 
@@ -260,7 +264,11 @@ function TranslationApp() {
                             <TextArea rows={4} placeholder={t('translation.sourceTextPlaceholder')} />
                         </Form.Item>
 
-                        <Space>
+                        <Space wrap style={{
+                            width: '100%',
+                            justifyContent: isMobile ? 'center' : 'flex-start',
+                            gap: isMobile ? '8px' : '12px'
+                        }}>
                             <Form.Item
                                 name="from"
                                 label={t('translation.sourceLanguage')}
@@ -274,6 +282,13 @@ function TranslationApp() {
                                     <Option value="italian">{t('translation.italian')}</Option>
                                     <Option value="korean">{t('translation.korean')}</Option>
                                     <Option value="japanese">{t('translation.japanese')}</Option>
+                                    <Option value="portuguese">{t('translation.portuguese')}</Option>
+                                    <Option value="russian">{t('translation.russian')}</Option>
+                                    <Option value="spanish">{t('translation.spanish')}</Option>
+                                    <Option value="tibetan">{t('translation.tibetan')}</Option>
+                                    <Option value="繁体中文">{t('translation.chinese_traditional')}</Option>
+                                    <Option value="粤语">{t('translation.cantonese')}</Option>
+                                    <Option value="文言文">{t('translation.classical_chinese')}</Option>
                                 </Select>
                             </Form.Item>
 
@@ -290,15 +305,46 @@ function TranslationApp() {
                                     <Option value="italian">{t('translation.italian')}</Option>
                                     <Option value="korean">{t('translation.korean')}</Option>
                                     <Option value="japanese">{t('translation.japanese')}</Option>
+                                    <Option value="portuguese">{t('translation.portuguese')}</Option>
+                                    <Option value="russian">{t('translation.russian')}</Option>
+                                    <Option value="spanish">{t('translation.spanish')}</Option>
+                                    <Option value="tibetan">{t('translation.tibetan')}</Option>
+                                    <Option value="繁体中文">{t('translation.chinese_traditional')}</Option>
+                                    <Option value="粤语">{t('translation.cantonese')}</Option>
+                                    <Option value="文言文">{t('translation.classical_chinese')}</Option>
                                 </Select>
                             </Form.Item>
                         </Space>
 
-                        <Form.Item>
-                            <Button type="primary" htmlType="submit" loading={loading}>
+                        <Space
+                            direction="vertical"
+                            style={{
+                                width: '100%',
+                                gap: '16px'
+                            }}
+                        >
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                loading={loading}
+                                block
+                            >
+                                <TranslationOutlined />
                                 {t('translation.translate')}
                             </Button>
-                        </Form.Item>
+
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'flex-end',
+                                gap: '8px'
+                            }}>
+                                <span>{t('settings.forceRefresh')}</span>
+                                <Form.Item name="forceRefresh" valuePropName="checked" style={{ marginBottom: 0 }}>
+                                    <Switch />
+                                </Form.Item>
+                            </div>
+                        </Space>
                     </Form>
                 </Card>
 
@@ -313,6 +359,7 @@ function TranslationApp() {
                                     title={result.model_name}
                                     style={{
                                         width: '100%',
+                                        visibility: result.translated_text !== '' ? 'visible' : 'hidden',
                                         boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
                                     }}
                                 >
@@ -351,7 +398,7 @@ function TranslationApp() {
                     </Card>
                 )}
             </Space>
-        </div>
+        </div >
     );
 }
 
